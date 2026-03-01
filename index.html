@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descubra o Impostor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1a252f;
+            color: white;
+            padding: 50px 20px;
+        }
+        h1 { color: #f1c40f; }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        button:hover { background-color: #2980b9; }
+        
+        .btn-reset {
+            background-color: #e74c3c;
+            font-size: 14px;
+            padding: 10px 20px;
+            margin-top: 50px;
+        }
+        .btn-reset:hover { background-color: #c0392b; }
+
+        input {
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            width: 60px;
+        }
+        #papelSecreto {
+            font-size: 24px;
+            color: white;
+            background-color: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: none;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+        }
+        .destaque {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f1c40f;
+            display: block;
+            margin-top: 15px;
+        }
+        .impostor-texto {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 32px;
+        }
+        .subtexto {
+            font-size: 16px;
+            color: #bdc3c7;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🕵️ Jogo do Impostor (Modo Hard)</h1>
+
+    <div id="telaConfig">
+        <p>Quantas pessoas vão jogar?</p>
+        <input type="number" id="numJogadores" value="4" min="3" max="15">
+        <br>
+        <button onclick="iniciarJogo()">Começar Jogo</button>
+    </div>
+
+    <div id="telaJogo" style="display: none;">
+        <h2 id="tituloJogador">Jogador 1</h2>
+        <p>Aperte o botão, memorize sua palavra e passe o celular.</p>
+        
+        <button id="btnVer" onclick="mostrarPalavra()">Ver minha palavra</button>
+        
+        <div id="papelSecreto"></div>
+        
+        <button id="btnProximo" onclick="proximoJogador()" style="display: none; background-color: #2ecc71;">
+            Esconder e passar celular
+        </button>
+    </div>
+
+    <div id="telaFim" style="display: none;">
+        <h2>Todos já viram!</h2>
+        <p>A rodada começou! Sem categorias, confiem nos seus instintos.</p>
+        <button onclick="resetarJogo()">Jogar Nova Rodada</button>
+    </div>
+
+    <br>
+    <button class="btn-reset" onclick="resetarJogo()">🔄 Resetar Jogo</button>
+
+    <script>
+        // LISTA DE 100 PALAVRAS (Sem Categorias!)
+        const bancoDePalavras = [
+            // Heróis e Vilões
+            "Batman", "Homem-Aranha", "Coringa", "Thanos", "Deadpool", 
+            "Mulher-Maravilha", "Wolverine", "Homem de Ferro", "Flash", "Hulk",
+            
+            // Cultura Pop Clássica e Séries
+            "Harry Potter", "Voldemort", "Darth Vader", "Yoda", "Chewbacca", 
+            "Eleven (Stranger Things)", "Demogorgon", "Sherlock Holmes", "Gandalf", "Gollum",
+            
+            // Animes, Desenhos e Games
+            "Goku", "Naruto", "Pikachu", "Bob Esponja", "Homer Simpson", 
+            "Pica-Pau", "Shrek", "Mario Bros", "Sonic", "Minions",
+            
+            // Cinema e Ação
+            "Jack Sparrow", "Indiana Jones", "James Bond", "Neo (Matrix)", "Willy Wonka", 
+            "Exterminador do Futuro", "John Wick", "Rocky Balboa", "Godzilla", "King Kong",
+            
+            // Pessoas Reais, Históricas e Esportes
+            "Albert Einstein", "Leonardo da Vinci", "Cleópatra", "Silvio Santos", "Pelé", 
+            "Abel Ferreira", "Elon Musk", "Steve Jobs", "Michael Jackson", "Ayrton Senna",
+            
+            // Animais (Fáceis e Específicos)
+            "Ornitorrinco", "Camaleão", "Polvo", "Arara Azul", "Boto Cor-de-Rosa", 
+            "Tucano", "Capivara", "Preguiça", "Tubarão Branco", "Pinguim",
+            
+            // Lugares e Monumentos
+            "Teatro Amazonas", "Torre Eiffel", "Estátua da Liberdade", "Cristo Redentor", "Pirâmides do Egito", 
+            "Coliseu", "Muralha da China", "Taj Mahal", "Machu Picchu", "Buraco Negro",
+            
+            // Tecnologia, Objetos e Invenções
+            "Placa Arduino", "Inteligência Artificial", "Máquina do Tempo", "Submarino", "Telescópio", 
+            "Drone", "Robô", "Máquina de Costura", "Carro Elétrico", "Óculos de Realidade Virtual",
+            
+            // Profissões e Arquetipos
+            "Astronauta", "Hacker", "Detetive", "Ninja", "Pirata", 
+            "Cientista Louco", "Zumbi", "Vampiro", "Mágico", "Gladiador",
+            
+            // Lendas e Diversos
+            "Drácula", "Frankenstein", "Tarzan", "Robin Hood", "Rei Arthur", 
+            "Papai Noel", "Fada do Dente", "Saci-Pererê", "Medusa", "Pégaso"
+        ];
+
+        let totalJogadores = 0;
+        let jogadorAtual = 1;
+        let impostorSorteado = 0;
+        let palavraSorteada = "";
+
+        function iniciarJogo() {
+            totalJogadores = parseInt(document.getElementById("numJogadores").value);
+            
+            impostorSorteado = Math.floor(Math.random() * totalJogadores) + 1;
+            
+            // Sorteia apenas a palavra
+            let indicePalavra = Math.floor(Math.random() * bancoDePalavras.length);
+            palavraSorteada = bancoDePalavras[indicePalavra];
+            
+            jogadorAtual = 1;
+
+            document.getElementById("telaConfig").style.display = "none";
+            document.getElementById("telaFim").style.display = "none";
+            document.getElementById("telaJogo").style.display = "block";
+            atualizarTela();
+        }
+
+        function atualizarTela() {
+            document.getElementById("tituloJogador").innerText = "Vez do Jogador " + jogadorAtual;
+            document.getElementById("papelSecreto").style.display = "none";
+            document.getElementById("btnVer").style.display = "inline-block";
+            document.getElementById("btnProximo").style.display = "none";
+        }
+
+        function mostrarPalavra() {
+            let texto = "";
+            if (jogadorAtual === impostorSorteado) {
+                texto = "<span class='impostor-texto'>VOCÊ É O IMPOSTOR! 😈</span><br>" +
+                        "<div class='subtexto'>Boa sorte tentando adivinhar sobre o que os outros estão falando...</div>";
+            } else {
+                texto = "O alvo da rodada é:<br>" +
+                        "<span class='destaque'>🌟 " + palavraSorteada + " 🌟</span>";
+            }
+
+            document.getElementById("papelSecreto").innerHTML = texto;
+            document.getElementById("papelSecreto").style.display = "block";
+            
+            document.getElementById("btnVer").style.display = "none";
+            document.getElementById("btnProximo").style.display = "inline-block";
+        }
+
+        function proximoJogador() {
+            jogadorAtual++;
+            if (jogadorAtual > totalJogadores) {
+                document.getElementById("telaJogo").style.display = "none";
+                document.getElementById("telaFim").style.display = "block";
+            } else {
+                atualizarTela();
+            }
+        }
+
+        function resetarJogo() {
+            location.reload();
+        }
+    </script>
+
+</body>
+</html>
